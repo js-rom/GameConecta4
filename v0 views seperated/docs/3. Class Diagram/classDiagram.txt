@@ -1,0 +1,64 @@
+@startuml
+
+class Connect4
+class Game
+class GameView
+class YesNoDialog
+class Board
+class BoardView
+class Goal
+class Turn
+
+Connect4 *-- Game
+Connect4 *-- YesNoDialog
+Game ..> GameView
+Game ..> Goal
+Board ..> BoardView
+Game *-- Board
+Game ..> Turn
+
+YesNoDialog : -question
+YesNoDialog : -answer
+YesNoDialog : -saveAnswer()
+YesNoDialog : +answerisAffirmative()
+YesNoDialog : +isNegative()
+YesNoDialog : +askToPlayAgain()
+
+Game : -resume()
+Game : +play()
+
+
+
+Turn : MAX_GameERS
+Turn : turn
+Turn : +getToken()
+Turn : +nextTurn()
+
+GameView : +printTitle()
+GameView : +printWinnerMsg()
+GameView : +printLosserMsg()
+GameView : +printTieMsg()
+
+Goal : -horizontal()
+Goal : -vertical()
+Goal : -diagonal()
+Goal : -inverse()
+Goal : +any()
+
+Board : COLUMNS
+Board : ROWS
+Board : board[]
+Board : -columnInRange()
+Board : -columnCompleted()
+Board : -getLowestAvailableSpace(column)
+Board : -addtokenToBoard()
+Board : +isCompleted()
+Board : +dropToken(token)
+
+
+BoardView : +printBoard()
+BoardView : +askColumn()
+BoardView : +printError()
+@enduml
+
+
