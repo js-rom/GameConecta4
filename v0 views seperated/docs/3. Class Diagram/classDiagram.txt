@@ -8,31 +8,33 @@ class Board
 class BoardView
 class Goal
 class Turn
+class TurnView
 
-Connect4 *-- Game
+Connect4 ..> Game
 Connect4 *-- YesNoDialog
 Game ..> GameView
 Game ..> Goal
 Board ..> BoardView
 Game *-- Board
-Game ..> Turn
+Game *-- Turn
+Turn ..> TurnView
 
 YesNoDialog : -question
 YesNoDialog : -answer
 YesNoDialog : -saveAnswer()
-YesNoDialog : +answerisAffirmative()
+YesNoDialog : +isAffirmative()
 YesNoDialog : +isNegative()
 YesNoDialog : +askToPlayAgain()
 
 Game : -resume()
 Game : +play()
 
-
-
-Turn : MAX_GameERS
+Turn : MAX_PLAYERS
 Turn : turn
 Turn : +getToken()
-Turn : +nextTurn()
+Turn : +next()
+
+TurnView : +printTurn()
 
 GameView : +printTitle()
 GameView : +printWinnerMsg()
@@ -43,7 +45,7 @@ Goal : -horizontal()
 Goal : -vertical()
 Goal : -diagonal()
 Goal : -inverse()
-Goal : +any()
+Goal : +anyAchived()
 
 Board : COLUMNS
 Board : ROWS
@@ -54,6 +56,7 @@ Board : -getLowestAvailableSpace(column)
 Board : -addtokenToBoard()
 Board : +isCompleted()
 Board : +dropToken(token)
+Board : +printBoard()
 
 
 BoardView : +printBoard()
