@@ -49,14 +49,23 @@ function initYesNoDialog (question) {
 
 function initGame () {
     let that = {
-        resume () {
-
+        resume (board, turn) {
+            return !board.isCompleted() && !initGoal().anyAchived(board, turn)
         }
     }
 
     return {
         play () {
-
+            initGameView().printTitle();
+            const board = initBoard();
+            board.printBoard();
+            const turn = initTurn();
+            do {
+                turn.next()
+                board.dropToken(turn.getToken())
+                board.printBoard();
+            } while (that.resume(board, turn))
+            initGoal().anyAchived(board, turn) ? initGameView().printWinnerMsg() : initGameView().printTieMsg();
         }
     }
 };
