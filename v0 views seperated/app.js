@@ -69,3 +69,63 @@ function initGame () {
         }
     }
 };
+
+function initBoard () {
+    let that = {
+        COLUMNS: 7,
+        ROWS: 6,
+        TOKEN_EMPTY: '',
+        board: [
+            [ TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY],
+            [ TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY],
+            [ TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY],
+            [ TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY],
+            [ TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY],
+            [ TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY],
+            [ TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY, TOKEN_EMPTY]
+        ],
+        columnInRange (column) {
+            return 0 <= column && column < this.COLUMNS
+        },
+
+        columnCompleted (column) {
+            if  (getLowestAvailableSpace(column) === undefined) {
+                return true
+            } else {return false}
+        },
+
+        getLowestAvailableSpace (column) {
+            for (let i = 0; i < this.ROWS; i++) {
+                if (this.board[column][i]===this.TOKEN_EMPTY) {return i}
+            }
+        },
+
+        addTokenToBoard (token, column) {
+            this.board[column][this.getLowestAvailableSpace(column)] = token;
+        }, 
+        
+    }
+
+    return {
+        isCompleted () {
+            let completed = true;
+            for (let i = 0; i < that.COLUMNS; i++) {
+                completed &= that.columnCompleted(i)
+            }
+        },
+
+        dropToken (token) {
+            let column;
+            do {
+                column = initBoardView().askColumn() - 1
+            } while (!that.columnInRange(column) || that.columnCompleted(column));
+            that.addTokenToBoard(token, column);
+            
+        },
+
+        printBoard () {
+            initBoardView().printBoard(board)
+        }
+
+    }
+}
