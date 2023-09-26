@@ -61,7 +61,8 @@ function initGame () {
             board.printBoard();
             const turn = initTurn();
             do {
-                turn.next()
+                turn.next();
+                turn.print();
                 board.dropToken(turn.getToken())
                 board.printBoard();
             } while (that.resume(board, turn))
@@ -162,4 +163,39 @@ function initBoardView () {
 
     }
 };
+
+function initTurn () {
+    let that = {
+        MAX_PLAYERS: 2,
+        tokens: ['R', 'Y'],
+        tokensName: ['RED', 'YELLOW'],
+        turn: 0
+    };
+
+    return {
+        getToken () {
+            return that.tokens[that.turn]
+        },
+
+        getTokenName () {
+            return that.tokensName[that.turn]
+        },
+
+        next () {
+            that.turn = (that.turn + 1) % that.MAX_PLAYERS;
+        },
+
+        print () {
+            initTurnView().printTurn(this.getTokenName())
+        }
+    }
+};
+
+function initTurnView () {
+    return {
+        printTurn (turn) {
+            console.writeln(`TURN: ${turn}`)
+        }
+    }
+}
 
