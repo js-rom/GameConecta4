@@ -118,14 +118,48 @@ function initBoard () {
             let column;
             do {
                 column = initBoardView().askColumn() - 1
+                if (!that.columnInRange(column)) {initBoardView().printError(`Invalid columnn!!! Values [1-7]`)}
+                if (that.columnCompleted(column)) {initBoardView().printError(`Invalid column!!! It's completed`)}
             } while (!that.columnInRange(column) || that.columnCompleted(column));
             that.addTokenToBoard(token, column);
             
         },
 
         printBoard () {
-            initBoardView().printBoard(board)
+            initBoardView().printBoard(that.board)
         }
 
     }
-}
+};
+
+function initBoardView () {
+
+    return {
+        printBoard (board) {
+            const HORIZONTAL_SEPARATOR = `-` //15
+            const VERTICAL_SEPARATOR = `|` //8
+            let msg = `---------------------\n` 
+            //console.writeln(`---------------------`)
+            for (let i = board[0].length ; i > 0 ; i--) {
+                for ( column of board) {
+                    msg += VERTICAL_SEPARATOR;
+                    msg += column[i-1];
+                    msg += VERTICAL_SEPARATOR;
+                }
+                msg += VERTICAL_SEPARATOR + '\n'
+            }
+            msg += `---------------------`
+            console.writeln(msg)
+        },
+
+        askColumn () {
+            return console.readNumber('Enter a column to drop a token:')
+        },
+ 
+        printError (msg) {
+            console.writeln(msg)
+        }
+
+    }
+};
+
