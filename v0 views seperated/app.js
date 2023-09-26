@@ -205,45 +205,63 @@ function initGoal (turn) {
     let diagonal_pattern = [[i,j],[i+1,j+1],[i+2,j+2],[i+3,j+3]]
     let inverse_pattern = [[i,j],[i-1,j-1],[i-2,j-2],[i-3,j-3]]
 
+
     let that = {
         CONNECTIONS_TO_GOAL: 4,
+        isConsecutiveConnection (pattern) {
+            let consecutiveConnection = true;
+            for (item of pattern) {
+                consecutiveConnection &= item === turn.getToken();
+            }
+            return consecutiveConnection
+        },
+
         horizontal ({board, ROWS}) {
-            for (let i = 0; i < ROWS; i++) {
-                let consecutiveConnections = 0
-                for (column of board) {
-                    if (column[i] !== turn.getToken()) {consecutiveConnections = 0}
-                    if (column[i] === turn.getToken()) {consecutiveConnections ++}
-                    if (consecutiveConnections === this.CONNECTIONS_TO_GOAL) {return true}
+            const MAX_COLUMN_TO_CHECK = COLUMNS - this.CONNECTIONS_TO_GOAL
+            const MAX_ROW_TO_CHECK = ROWS
+            for (let j = 0; j < MAX_COLUMN_TO_CHECK; j++) {
+                for (let i = 0; i < MAX_ROW_TO_CHECK; i++) {
+                    let horizontalPattern = [board[j][i],board[j+1][i],board[j+2][i],board[j+3][i]];
+                    if (isConsecutiveConnection(horizontalPattern)) {return true}
                 }
             }
-            return false
+            return false;
         },
 
         vertical ({board, ROWS}) {
-            for (let column of board){
-                let consecutiveConnections = 0
-                for (let i = 0; i < ROWS; i++){
-                    if (column[i] !== turn.getToken()) {consecutiveConnections = 0}
-                    if (column[i] === turn.getToken()) {consecutiveConnections ++}
-                    if (consecutiveConnections === this.CONNECTIONS_TO_GOAL) {return true}
+            const MAX_COLUMN_TO_CHECK = COLUMNS
+            const MAX_ROW_TO_CHECK = ROWS - this.CONNECTIONS_TO_GOAL
+            for (let j = 0; j < MAX_COLUMN_TO_CHECK; j++) {
+                for (let i = 0; i < MAX_ROW_TO_CHECK; i++) {
+                    let verticalPattern = [board[j][i],board[j][i+1],board[j][i+2],board[j][i+3]];
+                    if (isConsecutiveConnection(verticalPattern)) {return true}
                 }
-            return false
             }
+            return false;           
         },
 
         diagonal ({board, ROWS, COLUMNS}) {
             const MAX_COLUMN_TO_CHECK = COLUMNS - this.CONNECTIONS_TO_GOAL
             const MAX_ROW_TO_CHECK = ROWS - this.CONNECTIONS_TO_GOAL
-            for (let i = 0; i <= MAX_COLUMN_TO_CHECK; i++) {
-                let consecutiveConnections = 0
-                for (let i = 0; i <= MAX_ROW_TO_CHECK; i++) {
-
+            for (let j = 0; j < MAX_COLUMN_TO_CHECK; j++) {
+                for (let i = 0; i < MAX_ROW_TO_CHECK; i++) {
+                    let diagonalPattern = [board[j][i],board[j+1][i+1],board[j+2][i+2],board[j+3][i+3]];
+                    if (isConsecutiveConnection(diagonalPattern)) {return true}
                 }
             }
+            return false; 
         },
 
         inverse ({board, ROWS}) {
-
+            const MAX_COLUMN_TO_CHECK = COLUMNS - this.CONNECTIONS_TO_GOAL
+            const MIN_ROW_TO_CHECK = this.CONNECTIONS_TO_GOAL - 1
+            for (let j = 0; j < MAX_COLUMN_TO_CHECK; j++) {
+                for (let i = MIN_ROW_TO_CHECK; i < ROWS; i++) {
+                    let diagonalPattern = [board[j][i],board[j+1][i+1],board[j+2][i+2],board[j+3][i+3]];
+                    if (isConsecutiveConnection(diagonalPattern)) {return true}
+                }
+            }
+            return false; 
         }
     };
     
