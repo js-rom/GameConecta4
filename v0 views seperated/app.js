@@ -208,6 +208,17 @@ function initGoal (turn) {
 
     let that = {
         CONNECTIONS_TO_GOAL: 4,
+        offset (paramns) {
+            //initialColumn, initialRow, maxColumn, maxRow, pattern
+            for (let j = initialColumn; j < maxColumn; j++) {
+                for (let i = initialRow; i < maxRow; i++) {
+                    let horizontalPattern = [board[j][i],board[j+1][i],board[j+2][i],board[j+3][i]];
+                    if (isConsecutiveConnection(horizontalPattern)) {return true}
+                }
+            }
+            return false;
+        },
+
         isConsecutiveConnection (pattern) {
             let consecutiveConnection = true;
             for (item of pattern) {
@@ -257,8 +268,8 @@ function initGoal (turn) {
             const MIN_ROW_TO_CHECK = this.CONNECTIONS_TO_GOAL - 1
             for (let j = 0; j < MAX_COLUMN_TO_CHECK; j++) {
                 for (let i = MIN_ROW_TO_CHECK; i < ROWS; i++) {
-                    let diagonalPattern = [board[j][i],board[j+1][i+1],board[j+2][i+2],board[j+3][i+3]];
-                    if (isConsecutiveConnection(diagonalPattern)) {return true}
+                    let inversePattern = [board[j][i],board[j+1][i-1],board[j+2][i-2],board[j+3][i-3]];
+                    if (isConsecutiveConnection(inversePattern)) {return true}
                 }
             }
             return false; 
