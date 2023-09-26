@@ -50,7 +50,7 @@ function initYesNoDialog (question) {
 function initGame () {
     let that = {
         resume (board, turn) {
-            return !board.isCompleted() && !initGoal().anyAchived(board, turn)
+            return !board.isCompleted() && !initGoal(turn).anyAchived(board)
         }
     }
 
@@ -140,7 +140,6 @@ function initBoardView () {
             const HORIZONTAL_SEPARATOR = `-` //15
             const VERTICAL_SEPARATOR = `|` //8
             let msg = `---------------------\n` 
-            //console.writeln(`---------------------`)
             for (let i = board[0].length ; i > 0 ; i--) {
                 for ( column of board) {
                     msg += VERTICAL_SEPARATOR;
@@ -197,5 +196,62 @@ function initTurnView () {
             console.writeln(`TURN: ${turn}`)
         }
     }
-}
+};
+
+function initGoal (turn) {
+    //  declarar patrones que al cambiar la coordenada inicial sse vaya moviendo y campatando la info
+    let horizontal_pattern = [[i,j],[i,j+1],[i,j+2],[i,j+3]]
+    let vertical_pattern = [[i,j],[i+1,j],[i+2,j],[i+3,j]]
+    let diagonal_pattern = [[i,j],[i+1,j+1],[i+2,j+2],[i+3,j+3]]
+    let inverse_pattern = [[i,j],[i-1,j-1],[i-2,j-2],[i-3,j-3]]
+
+    let that = {
+        CONNECTIONS_TO_GOAL: 4,
+        horizontal ({board, ROWS}) {
+            for (let i = 0; i < ROWS; i++) {
+                let consecutiveConnections = 0
+                for (column of board) {
+                    if (column[i] !== turn.getToken()) {consecutiveConnections = 0}
+                    if (column[i] === turn.getToken()) {consecutiveConnections ++}
+                    if (consecutiveConnections === this.CONNECTIONS_TO_GOAL) {return true}
+                }
+            }
+            return false
+        },
+
+        vertical ({board, ROWS}) {
+            for (let column of board){
+                let consecutiveConnections = 0
+                for (let i = 0; i < ROWS; i++){
+                    if (column[i] !== turn.getToken()) {consecutiveConnections = 0}
+                    if (column[i] === turn.getToken()) {consecutiveConnections ++}
+                    if (consecutiveConnections === this.CONNECTIONS_TO_GOAL) {return true}
+                }
+            return false
+            }
+        },
+
+        diagonal ({board, ROWS, COLUMNS}) {
+            const MAX_COLUMN_TO_CHECK = COLUMNS - this.CONNECTIONS_TO_GOAL
+            const MAX_ROW_TO_CHECK = ROWS - this.CONNECTIONS_TO_GOAL
+            for (let i = 0; i <= MAX_COLUMN_TO_CHECK; i++) {
+                let consecutiveConnections = 0
+                for (let i = 0; i <= MAX_ROW_TO_CHECK; i++) {
+
+                }
+            }
+        },
+
+        inverse ({board, ROWS}) {
+
+        }
+    };
+    
+
+    return {
+        anyAchived (board) {
+            return that.horizontal(board) || that.vertical(board) || that.diagonal(board) || that.inverse(board)
+        }
+    }
+};
 
