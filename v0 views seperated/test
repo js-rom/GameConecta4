@@ -1,0 +1,22 @@
+const { Console } = require('./console');
+const console = new Console();
+
+
+let array = [[1,2,3],[4,5,6],[7,8,9]];
+
+for (column of array) {
+    console.writeln('---')
+    console.writeln(column[0])
+}
+
+let token = 10;
+
+let objeto = {
+    token_empty: 1,
+    array: [[this.token_empty, token],[token, token]]
+}
+
+for (column of objeto.array) {
+    console.writeln('***')
+    console.writeln(column)
+}
