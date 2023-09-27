@@ -49,8 +49,7 @@ function initYesNoDialog (question) {
 function initGame () {
   const that = {
     resume (board, turn) {
-        console.writeln('resume-goal: ' + initGoal(turn).anyAchived(board))
-      return !board.isCompleted() && !initGoal(turn).anyAchived(board);
+      return !board.isCompleted() && !initGoal(turn, board).anyAchived();
     }
   };
 
@@ -66,7 +65,7 @@ function initGame () {
         board.dropToken(turn.getToken());
         board.printBoard();
       } while (that.resume(board, turn));
-      initGoal(turn).anyAchived(board) ? initGameView().printWinnerMsg(turn.getToken()) : initGameView().printTieMsg();
+      initGoal(turn, board).anyAchived() ? initGameView().printWinnerMsg(turn.getTokenName()) : initGameView().printTieMsg();
     }
   };
 }
@@ -164,15 +163,13 @@ function initBoard () {
 function initBoardView () {
   return {
     printBoard (board) {
-      // const HORIZONTAL_SEPARATOR = '-'; // 15
-      const VERTICAL_SEPARATOR = '|'; // 8
+
+      const VERTICAL_SEPARATOR = '|';
       let msg = '---------------\n';
       for (let i = board[0].length; i > 0; i--) {
         for (const column of board) {
-          //console.writeln(column)
           msg += VERTICAL_SEPARATOR;
           msg += column[i - 1];
-          //msg += VERTICAL_SEPARATOR;
         }
         msg += VERTICAL_SEPARATOR + '\n';
       }
@@ -226,73 +223,52 @@ function initTurnView () {
   };
 }
 
-function initGoal (turn) {
+function initGoal (turn, board) {
   const that = {
     CONNECTIONS_TO_GOAL: 4,
-    /*horizontal ({ board, ROWS, COLUMNS }) {
-      const searchSettings = {
-        initialColumn: 0,
-        initialRow: 0,
-        maxColumn: COLUMNS - that.CONNECTIONS_TO_GOAL,
-        maxRow: ROWS,
-        pattern: [[this.initialColumn, this.initialRow], [this.initialColumn + 1, this.initialRow], [this.initialColumn + 2, this.initialRow], [this.initialColumn + 3, this.initialRow]]
-      };
-      return this.checkPattern(searchSettings, board);
-    },*/
 
-    vertical (board) {
-      let searchSettings = {
-        initialColumn: 0,
-        initialRow: 0,
-        maxColumn: board.maxColumns(),
-        maxRow: board.maxRows() - that.CONNECTIONS_TO_GOAL,
-        // pattern: [[this.initialColumn, this.initialRow], [this.initialColumn, this.initialRow + 1], [this.initialColumn, this.initialRow + 2], [this.initialColumn, this.initialRow + 3]]
-      };
-      searchSettings.pattern = [[searchSettings.initialColumn, searchSettings.initialRow], [searchSettings.initialColumn, searchSettings.initialRow + 1], [searchSettings.initialColumn, searchSettings.initialRow + 2], [searchSettings.initialColumn, searchSettings.initialRow + 3]]
-      console.writeln('vertical called')
-      return this.checkPattern(searchSettings, board);
+    horizontal () {
+      const searchSettings = this.setSettings([0, 0], [board.maxColumns() - this.CONNECTIONS_TO_GOAL, board.maxRows() ], [[0, 0], [1, 0], [2, 0], [3, 0]]);
+      return this.checkPattern(searchSettings);
     },
 
-    /*diagonal ({ board, ROWS, COLUMNS }) {
-      const searchSettings = {
-        initialColumn: 0,
-        initialRow: 0,
-        maxColumn: COLUMNS - that.CONNECTIONS_TO_GOAL,
-        maxRow: ROWS - that.CONNECTIONS_TO_GOAL,
-        pattern: [[this.initialColumn, this.initialRow], [this.initialColumn + 1, this.initialRow + 1], [this.initialColumn + 2, this.initialRow + 2], [this.initialColumn + 3, this.initialRow + 3]]
-      };
-      return this.checkPattern(searchSettings, board);
+    vertical () {
+      const searchSettings = this.setSettings([0, 0], [board.maxColumns()-1, board.maxRows() - this.CONNECTIONS_TO_GOAL], [[0, 0], [0, 1], [0, 2], [0, 3]]);
+      return this.checkPattern(searchSettings);
+
     },
 
-    inverse ({ board, ROWS, COLUMNS }) {
-      const searchSettings = {
-        initialColumn: 0,
-        initialRow: that.CONNECTIONS_TO_GOAL - 1,
-        maxColumn: COLUMNS - that.CONNECTIONS_TO_GOAL,
-        maxRow: ROWS,
-        pattern: [[this.initialColumn, this.initialRow], [this.initialColumn + 1, this.initialRow - 1], [this.initialColumn + 2, this.initialRow - 2], [this.initialColumn + 3, this.initialRow - 3]]
-      };
-      return this.checkPattern(searchSettings, board);
-    },*/
+    diagonal () {
+      const searchSettings = this.setSettings([0, 0], [board.maxColumns() - this.CONNECTIONS_TO_GOAL, board.maxRows() - this.CONNECTIONS_TO_GOAL], [[0, 0], [1, 1], [2, 2], [3, 3]]);
+      return this.checkPattern(searchSettings);
+    },
 
-    checkPattern (searchSettings, board) {
-        console.writeln('checkPattern called')
-      const { initialColumn, initialRow, maxColumn, maxRow, pattern } = searchSettings;
-      console.writeln('initialColumn ' + initialColumn)
-      console.writeln('initialRow ' + initialRow)
-      console.writeln('maxColumn ' + maxColumn)
-      console.writeln('maxRow ' + maxRow)
-      console.writeln('pattern ' + pattern)
+    inverse () {
+      const searchSettings = this.setSettings([0, this.CONNECTIONS_TO_GOAL - 1], [board.maxColumns() - this.CONNECTIONS_TO_GOAL, board.maxRows()-1], [[0, 0], [1, -1], [2, -2], [3, -3]]);
+      return this.checkPattern(searchSettings);
+    },
+
+    setSettings (initialCoordenate, maxCoordenate, offset) {
+      let searchSettings = {}
+      searchSettings.initialColumn = initialCoordenate[0],
+      searchSettings.initialRow = initialCoordenate[1],
+      searchSettings.maxColumn = maxCoordenate[0],
+      searchSettings.maxRow = maxCoordenate[1],
+      searchSettings.offset = offset
+      return searchSettings;
+    },
+
+    checkPattern (searchSettings) {
+      const { initialColumn, initialRow, maxColumn, maxRow, offset } = searchSettings;
       const boardMatrix = board.getBoard();
-      for (let j = initialColumn; j < maxColumn; j++) {
-        for (let i = initialRow; i < maxRow; i++) {
+      for (let j = initialColumn; j <= maxColumn; j++) {
+        for (let i = initialRow; i <= maxRow; i++) {
           const patternValues = [
-            boardMatrix[pattern[0][0]][pattern[0][1]],
-            boardMatrix[pattern[1][0]][pattern[1][1]],
-            boardMatrix[pattern[2][0]][pattern[2][1]],
-            boardMatrix[pattern[3][0]][pattern[3][1]]
+            boardMatrix[j + offset[0][0]][i + offset[0][1]],
+            boardMatrix[j + offset[1][0]][i + offset[1][1]],
+            boardMatrix[j + offset[2][0]][i + offset[2][1]],
+            boardMatrix[j + offset[3][0]][i + offset[3][1]]
           ];
-          console.writeln('patternValue: ' + patternValues)
           if (this.isConsecutiveConnection(patternValues)) { return true; }
         }
       }
@@ -301,11 +277,7 @@ function initGoal (turn) {
 
     isConsecutiveConnection (pattern) {
       let consecutiveConnection = true;
-      console.writeln('isConsecutiveConnection() ');
       for (const item of pattern) {
-        console.writeln('item: ' + item);
-        console.writeln('token: ' + turn.getToken());
-        console.writeln('igualdad: ' + item === turn.getToken());
         consecutiveConnection &= item === turn.getToken();
       }
       return consecutiveConnection;
@@ -313,13 +285,8 @@ function initGoal (turn) {
   };
 
   return {
-    anyAchived (board) {
-        //console.writeln(that.horizontal(board));
-        console.writeln(that.vertical(board));
-        //console.writeln(that.diagonal(board));
-        //console.writeln(that.inverse(board));
-     // return that.horizontal(board) || that.vertical(board) || that.diagonal(board) || that.inverse(board);
-     return that.vertical(board)
+    anyAchived () {
+     return that.horizontal() || that.vertical() || that.diagonal() || that.inverse();
     }
   };
 }
