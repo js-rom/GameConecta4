@@ -14,6 +14,7 @@ function connectFour () {
     }
   };
 }
+
 function initYesNoDialog (question) {
   const that = {
     question,
@@ -48,8 +49,8 @@ function initYesNoDialog (question) {
 
 function initGame () {
   const that = {
-    resume (board, turn) {
-      return !board.isCompleted() && !initGoal(turn, board).anyAchived();
+    resume (board) {
+      return !board.isCompleted() && !initGoal(board).anyAchived();
     }
   };
 
@@ -58,14 +59,14 @@ function initGame () {
       initGameView().printTitle();
       const board = initBoard();
       board.printBoard();
-      const turn = initTurn();
+      //const turn = initTurn();
       do {
-        turn.next();
-        turn.print();
-        board.dropToken(turn.getToken());
+        board.turn.next();
+        board.turn.print();
+        board.dropToken(board.turn.getToken());
         board.printBoard();
-      } while (that.resume(board, turn));
-      initGoal(turn, board).anyAchived() ? initGameView().printWinnerMsg(turn.getTokenName()) : initGameView().printTieMsg();
+      } while (that.resume(board));
+      initGoal(board).anyAchived() ? initGameView().printWinnerMsg(board.turn.getTokenName()) : initGameView().printTieMsg();
     }
   };
 }
@@ -155,7 +156,9 @@ function initBoard () {
 
     getBoard () {
       return that.board;
-    }
+    },
+
+    turn: initTurn()
 
   };
 }
@@ -223,7 +226,7 @@ function initTurnView () {
   };
 }
 
-function initGoal (turn, board) {
+function initGoal (board) {
   const that = {
     CONNECTIONS_TO_GOAL: 4,
 
@@ -278,7 +281,7 @@ function initGoal (turn, board) {
     isConsecutiveConnection (pattern) {
       let consecutiveConnection = true;
       for (const item of pattern) {
-        consecutiveConnection &= item === turn.getToken();
+        consecutiveConnection &= item === board.turn.getToken();
       }
       return consecutiveConnection;
     }

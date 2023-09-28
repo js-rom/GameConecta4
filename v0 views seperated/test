@@ -2,21 +2,43 @@ const { Console } = require('./console');
 const console = new Console();
 
 
-let array = [[1,2,3],[4,5,6],[7,8,9]];
+function initCompound () {
+    let that = {
+        component: initComponent()
+    }
 
-for (column of array) {
-    console.writeln('---')
-    console.writeln(column[0])
+    return {
+        incrementConponent () {
+            that.component.incrementCounter()
+        },
+
+        printCounter () {
+            console.writeln(that.component.getCounter())
+        }
+    }
 }
 
-let token = 10;
+function initComponent () {
+    let that = {
+        counter: 0
+    }
 
-let objeto = {
-    token_empty: 1,
-    array: [[this.token_empty, token],[token, token]]
+    return {
+        getCounter () {
+            return that.counter
+        },
+
+        incrementCounter () {
+            that.counter++
+        }
+    }
 }
 
-for (column of objeto.array) {
-    console.writeln('***')
-    console.writeln(column)
-}
+const prueba = initCompound();
+console.writeln(prueba.printCounter())
+
+prueba.incrementConponent()
+console.writeln(prueba.printCounter())
+
+prueba.incrementConponent()
+console.writeln(prueba.printCounter())
