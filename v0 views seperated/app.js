@@ -229,30 +229,11 @@ function initTurnView () {
 function initGoal (board) {
   const that = {
     CONNECTIONS_TO_GOAL: 4,
-
-    horizontal () {
-      return this.checkPattern({initialColumn: 0, initialRow: 0, columnOffset: 1, rowOffset: 0});
-    },
-
-    vertical () {
-      return this.checkPattern({initialColumn: 0, initialRow: 0, columnOffset: 0, rowOffset: 1});
-    },
-
-    diagonal () {
-      return this.checkPattern({initialColumn: 0, initialRow: 0, columnOffset: 1, rowOffset: 1});
-    },
-
-    inverse () {
-      return this.checkPattern({initialColumn: 0, initialRow: 3, columnOffset: 1, rowOffset: -1});
-    },
-
     checkPattern (searchSettings) {
       const { initialColumn, initialRow, columnOffset, rowOffset } = searchSettings;
-      const MAX_COLUMN = board.maxColumns() - 1 - (this.CONNECTIONS_TO_GOAL - 1) * columnOffset
-      const MAX_ROW = board.maxRows() - 1 - (this.CONNECTIONS_TO_GOAL - 1) * (rowOffset < 0 ? 0 : rowOffset)
       const boardMatrix = board.getBoard();
-      for (let j = initialColumn; j <= MAX_COLUMN; j++) {
-        for (let i = initialRow; i <= MAX_ROW; i++) {
+      for (let j = initialColumn; j <= this.maxColumn(searchSettings); j++) {
+        for (let i = initialRow; i <=  this.maxRow(searchSettings); i++) {
           const patternValues = [
             boardMatrix[j][i],
             boardMatrix[j + columnOffset * 1][i + rowOffset * 1],
@@ -263,6 +244,14 @@ function initGoal (board) {
         }
       }
       return false;
+    },
+
+    maxColumn (searchSettings) {
+      return board.maxColumns() - 1 - (this.CONNECTIONS_TO_GOAL - 1) * searchSettings.columnOffset;
+    },
+
+    maxRow (searchSettings) {
+      return board.maxRows() - 1 - (this.CONNECTIONS_TO_GOAL - 1) * (searchSettings.rowOffset < 0 ? 0 : searchSettings.rowOffset);
     },
 
     isConsecutiveConnection (pattern) {
@@ -276,7 +265,11 @@ function initGoal (board) {
 
   return {
     anyAchived () {
-      return that.horizontal() || that.vertical() || that.diagonal() || that.inverse();
+      const horizontal = that.checkPattern({initialColumn: 0, initialRow: 0, columnOffset: 1, rowOffset: 0});
+      const vertical = that.checkPattern({initialColumn: 0, initialRow: 0, columnOffset: 0, rowOffset: 1});
+      const diagonal = that.checkPattern({initialColumn: 0, initialRow: 0, columnOffset: 1, rowOffset: 1});
+      const inverse = that.checkPattern({initialColumn: 0, initialRow: 3, columnOffset: 1, rowOffset: -1});
+      return horizontal || vertical || diagonal || inverse;
     }
   };
 }
