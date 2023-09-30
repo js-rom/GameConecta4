@@ -202,10 +202,6 @@ function initTurn () {
     next () {
       that.turn = (that.turn + 1) % that.MAX_PLAYERS;
     },
-
-    print () {
-      initTurnView().printTurn(this.getTokenName());
-    }
   };
 }
 
