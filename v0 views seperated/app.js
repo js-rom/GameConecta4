@@ -1,16 +1,52 @@
 const { Console } = require('./console');
 const console = new Console();
 
-connectFour().play();
+const yesNoDialog = initYesNoDialog('Would you like to play again?');
+do {
+  initConnectFourView().printTitle()
+  const connectFour = initConnectFour()
+  connectFour.play();
+  initConnectFourView(connectFour).printRoundResult()
+  yesNoDialog.askToPlayAgain()
+} while (yesNoDialog.isAffirmative())
 
-function connectFour () {
+function initConnectFour () {
   return {
+    board: initBoard(),
+
     play () {
-      const yesNoDialog = initYesNoDialog('Would you like to play again?');
+      initBoardView(this.board).printBoard();
       do {
-        initGame().play();
-        yesNoDialog.askToPlayAgain();
-      } while (yesNoDialog.isAffirmative());
+        this.board.turn.next();
+        initBoardView(this.board).turn.printTurn()
+        let column = initBoardView(this.board).askColumn() - 1;
+        this.board.addTokenToBoard(column);
+        initBoardView(this.board).printBoard();
+      } while (this.resume(this.board));
+    },
+
+    resume (board) {
+      return !board.isCompleted() && !initGoal(board).anyAchived();
+    }
+  }
+}
+
+function initConnectFourView (connectFour) {
+  return {
+    printTitle () {
+      console.writeln('--- CONNECT 4 ---');
+    },
+  
+    printWinnerMsg (msg) {
+      console.writeln(`${msg} WIN!!! :-)`);
+    },
+  
+    printTieMsg () {
+      console.writeln('TIED!!!');
+    },
+
+    printRoundResult () {
+      initGoal(connectFour.board).anyAchived() ? this.printWinnerMsg(connectFour.board.turn.getTokenName()) : this.printTieMsg();
     }
   };
 }
@@ -47,46 +83,6 @@ function initYesNoDialog (question) {
   };
 }
 
-function initGame () {
-  const that = {
-    resume (board) {
-      return !board.isCompleted() && !initGoal(board).anyAchived();
-    }
-  };
-
-  return {
-    play () {
-      initGameView().printTitle();
-      const board = initBoard();
-      board.printBoard();
-      //const turn = initTurn();
-      do {
-        board.turn.next();
-        board.turn.print();
-        board.dropToken(board.turn.getToken());
-        board.printBoard();
-      } while (that.resume(board));
-      initGoal(board).anyAchived() ? initGameView().printWinnerMsg(board.turn.getTokenName()) : initGameView().printTieMsg();
-    }
-  };
-}
-
-function initGameView () {
-  return {
-    printTitle () {
-      console.writeln('--- CONNECT 4 ---');
-    },
-
-    printWinnerMsg (msg) {
-      console.writeln(`${msg} WIN!!! :-)`);
-    },
-
-    printTieMsg () {
-      console.writeln('TIED!!!');
-    }
-  };
-}
-
 function initBoard () {
   const that = {
     COLUMNS: 7,
@@ -101,15 +97,6 @@ function initBoard () {
       [' ', ' ', ' ', ' ', ' ', ' '],
       [' ', ' ', ' ', ' ', ' ', ' ']
     ],
-    columnInRange (column) {
-      return column >= 0 && column < this.COLUMNS;
-    },
-
-    columnCompleted (column) {
-      if (this.getLowestAvailableSpace(column) === undefined) {
-        return true;
-      } else { return false; }
-    },
 
     getLowestAvailableSpace (column) {
       for (let i = 0; i < this.ROWS; i++) {
@@ -117,33 +104,29 @@ function initBoard () {
       }
     },
 
-    addTokenToBoard (token, column) {
-      this.board[column][this.getLowestAvailableSpace(column)] = token;
-    }
-
   };
 
   return {
     isCompleted () {
       let completed = true;
       for (let i = 0; i < that.COLUMNS; i++) {
-        completed &= that.columnCompleted(i);
+        completed &= this.columnCompleted(i);
       }
       return completed;
     },
 
-    dropToken (token) {
-      let column;
-      do {
-        column = initBoardView().askColumn() - 1;
-        if (!that.columnInRange(column)) { initBoardView().printError('Invalid columnn!!! Values [1-7]'); }
-        if (that.columnCompleted(column)) { initBoardView().printError('Invalid column!!! It\'s completed'); }
-      } while (!that.columnInRange(column) || that.columnCompleted(column));
-      that.addTokenToBoard(token, column);
+    addTokenToBoard (column) {
+      that.board[column][that.getLowestAvailableSpace(column)] = this.turn.getToken();
     },
 
-    printBoard () {
-      initBoardView().printBoard(that.board);
+    columnInRange (column) {
+      return column >= 0 && column < that.COLUMNS;
+    },
+
+    columnCompleted (column) {
+      if (that.getLowestAvailableSpace(column) === undefined) {
+        return true;
+      } else { return false; }
     },
 
     maxColumns () {
@@ -163,14 +146,14 @@ function initBoard () {
   };
 }
 
-function initBoardView () {
+function initBoardView (board) {
   return {
-    printBoard (board) {
-
+    printBoard () {
+      const boardMatrix =  board.getBoard();
       const VERTICAL_SEPARATOR = '|';
       let msg = '---------------\n';
-      for (let i = board[0].length; i > 0; i--) {
-        for (const column of board) {
+      for (let i = boardMatrix[0].length; i > 0; i--) {
+        for (const column of boardMatrix) {
           msg += VERTICAL_SEPARATOR;
           msg += column[i - 1];
         }
@@ -181,12 +164,20 @@ function initBoardView () {
     },
 
     askColumn () {
-      return console.readNumber('Enter a column to drop a token:');
+      let column
+      do {
+        column = console.readNumber('Enter a column to drop a token:');
+        if (!board.columnInRange(column)) { this.printError('Invalid columnn!!! Values [1-7]'); }
+        if (board.columnCompleted(column)) { this.printError('Invalid column!!! It\'s completed'); }
+      } while (!board.columnInRange(column) || board.columnCompleted(column))
+      return column;
     },
 
     printError (msg) {
       console.writeln(msg);
-    }
+    },
+
+    turn: initTurnView(board)
 
   };
 }
@@ -218,10 +209,10 @@ function initTurn () {
   };
 }
 
-function initTurnView () {
+function initTurnView (board) {
   return {
-    printTurn (turn) {
-      console.writeln(`TURN: ${turn}`);
+    printTurn () {
+      console.writeln(`TURN: ${board.turn.getTokenName()}`);
     }
   };
 }
