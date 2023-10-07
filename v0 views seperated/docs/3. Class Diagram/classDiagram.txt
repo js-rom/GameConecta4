@@ -10,14 +10,21 @@ class Goal
 class Turn
 class TurnView
 
-Connect4 ..> Game
+Connect4 *-- Game
 Connect4 *-- YesNoDialog
-Game ..> GameView
+Connect4 ..> GameView
+GameView ..> Game
+GameView ..> Goal
 Game ..> Goal
-Board ..> BoardView
 Game *-- Board
-Game *-- Turn
+Game ..> BoardView
+Board *-- Turn
+BoardView ..> Board
+BoardView *-- TurnView
 Turn ..> TurnView
+TurnView ..> Board
+
+Connect4 : +start()
 
 YesNoDialog : -question
 YesNoDialog : -answer
@@ -26,12 +33,16 @@ YesNoDialog : +isAffirmative()
 YesNoDialog : +isNegative()
 YesNoDialog : +askToPlayAgain()
 
+Game : +board {Board}
 Game : -resume()
 Game : +play()
 
-Turn : MAX_PLAYERS
-Turn : turn
+Turn : -MAX_PLAYERS
+Turn : -turn
+Turn : -tokens
+Turn : -tokensName
 Turn : +getToken()
+Turn : +getTokenName()
 Turn : +next()
 
 TurnView : +printTurn()
@@ -40,7 +51,9 @@ GameView : +printTitle()
 GameView : +printWinnerMsg()
 GameView : +printLosserMsg()
 GameView : +printTieMsg()
+GameView : +printRoundResults()
 
+Goal : CONNECTIONS_TO_GOAL
 Goal : -horizontal()
 Goal : -vertical()
 Goal : -diagonal()
@@ -49,19 +62,24 @@ Goal : +anyAchived()
 
 Board : COLUMNS
 Board : ROWS
+Board : TOKEN_EMPTY
 Board : board[]
-Board : -columnInRange()
-Board : -columnCompleted()
 Board : -getLowestAvailableSpace(column)
-Board : -addtokenToBoard()
 Board : +isCompleted()
+Board : +addtokenToBoard()
+Board : +columnInRange()
+Board : +columnCompleted()
+Board : +maxColumns()
+Board : +maxRows()
 Board : +dropToken(token)
-Board : +printBoard()
+Board : +getBoard()
+Board : +turn {Turn}
 
-
+BoardView : -getValidColumnRange()
+BoardView : -printError()
 BoardView : +printBoard()
 BoardView : +askColumn()
-BoardView : +printError()
+BoardView : +turn{TurnView}
 @enduml
 
 
