@@ -1,16 +1,25 @@
 const { Console } = require('./console');
 const console = new Console();
 
-const yesNoDialog = initYesNoDialog('Would you like to play again?');
-do {
-  initConnectFourView().printTitle()
-  const connectFour = initConnectFour()
-  connectFour.play();
-  initConnectFourView(connectFour).printRoundResult()
-  yesNoDialog.askToPlayAgain()
-} while (yesNoDialog.isAffirmative())
+initConnectFour().start();
 
 function initConnectFour () {
+  return {
+    start () {
+      const yesNoDialog = initYesNoDialog('Would you like to play again?');
+      do {
+        initGameView().printTitle()
+        const game = initGame()
+        game.play();
+        initGameView(game).printRoundResult()
+        yesNoDialog.askToPlayAgain()
+      } while (yesNoDialog.isAffirmative())
+    }
+  }
+}
+
+
+function initGame () {
   return {
     board: initBoard(),
 
@@ -19,7 +28,7 @@ function initConnectFour () {
       do {
         this.board.turn.next();
         initBoardView(this.board).turn.printTurn()
-        let column = initBoardView(this.board).askColumn() - 1;
+        let column = initBoardView(this.board).askColumn();
         this.board.addTokenToBoard(column);
         initBoardView(this.board).printBoard();
       } while (this.resume(this.board));
@@ -31,7 +40,7 @@ function initConnectFour () {
   }
 }
 
-function initConnectFourView (connectFour) {
+function initGameView (game) {
   return {
     printTitle () {
       console.writeln('--- CONNECT 4 ---');
@@ -46,7 +55,7 @@ function initConnectFourView (connectFour) {
     },
 
     printRoundResult () {
-      initGoal(connectFour.board).anyAchived() ? this.printWinnerMsg(connectFour.board.turn.getTokenName()) : this.printTieMsg();
+      initGoal(game.board).anyAchived() ? this.printWinnerMsg(game.board.turn.getTokenName()) : this.printTieMsg();
     }
   };
 }
@@ -147,6 +156,20 @@ function initBoard () {
 }
 
 function initBoardView (board) {
+  let that = {
+    getValidColumnRange () {
+      let column
+      do {
+        column = console.readNumber('Enter a column to drop a token:') - 1;
+        if (!board.columnInRange(column)) { this.printError('Invalid columnn!!! Values [1-7]'); }
+      } while (!board.columnInRange(column))
+      return column
+    },
+
+    printError (msg) {
+      console.writeln(msg);
+    },
+  }
   return {
     printBoard () {
       const boardMatrix =  board.getBoard();
@@ -166,15 +189,10 @@ function initBoardView (board) {
     askColumn () {
       let column
       do {
-        column = console.readNumber('Enter a column to drop a token:');
-        if (!board.columnInRange(column)) { this.printError('Invalid columnn!!! Values [1-7]'); }
-        if (board.columnCompleted(column)) { this.printError('Invalid column!!! It\'s completed'); }
-      } while (!board.columnInRange(column) || board.columnCompleted(column))
+        column = that.getValidColumnRange()
+        if (board.columnCompleted(column)) { that.printError('Invalid column!!! It\'s completed'); }
+      } while (board.columnCompleted(column))
       return column;
-    },
-
-    printError (msg) {
-      console.writeln(msg);
     },
 
     turn: initTurnView(board)
