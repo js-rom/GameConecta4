@@ -254,6 +254,7 @@ function initToken(coordenate, token, parent) {
                     temp = neighbour;
                 } else {
                     that.direction.switchOffSet();
+                    temp = myself;
                 }
             }
             return consecutiveTokens;
