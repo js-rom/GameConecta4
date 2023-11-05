@@ -1,28 +1,25 @@
 @startuml
 
 class Connect4
-class Game
 class GameView
 class YesNoDialog
 class Board
 class BoardView
-class Goal
 class Turn
 class TurnView
+class Token
+class Direction
 
-Connect4 *-- Game
+
 Connect4 *-- YesNoDialog
-Connect4 ..> GameView
-GameView ..> Game
-GameView ..> Goal
-Game ..> Goal
-Game *-- Board
-Game ..> BoardView
-Board *-- Turn
-BoardView ..> Board
+Connect4 *-- GameView
+GameView *-- BoardView
 BoardView *-- TurnView
-Turn ..> TurnView
-TurnView ..> Board
+BoardView ..> Board
+Board *-- Turn
+Board o-- Token
+Token *-- Direction
+TurnView ..> Turn
 
 Connect4 : +start()
 
@@ -33,9 +30,33 @@ YesNoDialog : +isAffirmative()
 YesNoDialog : +isNegative()
 YesNoDialog : +askToPlayAgain()
 
-Game : +board {Board}
-Game : -resume()
-Game : +play()
+GameView : -boardView{BoardView}
+GameView : +printTitle()
+GameView : +printWinnerMsg()
+GameView : +printLosserMsg()
+GameView : +printTieMsg()
+GameView : +printRoundResults()
+GameView : +play()
+GameView : +resume()
+
+BoardView : -EMPTY_TOKEN
+BoardView : -board
+BoardView : +turn{TurnView}
+BoardView : -askValidColumnNumber()
+BoardView : -columnCompleted()
+BoardView : -printError()
+BoardView : +anyGoalAchived()
+BoardView : +printBoard()
+BoardView : +askValidColumn()
+BoardView : +addToken()
+BoardView : +boardCompleted()
+
+BoardView : +addToken()
+
+TurnView : +printTurn()
+TurnView : +getToken()
+TurnView : +getTokenName()
+TurnView : +next()
 
 Turn : -MAX_PLAYERS
 Turn : -turn
@@ -45,41 +66,40 @@ Turn : +getToken()
 Turn : +getTokenName()
 Turn : +next()
 
-TurnView : +printTurn()
-
-GameView : +printTitle()
-GameView : +printWinnerMsg()
-GameView : +printLosserMsg()
-GameView : +printTieMsg()
-GameView : +printRoundResults()
-
-Goal : CONNECTIONS_TO_GOAL
-Goal : -horizontal()
-Goal : -vertical()
-Goal : -diagonal()
-Goal : -inverse()
-Goal : +anyAchived()
-
-Board : COLUMNS
-Board : ROWS
-Board : TOKEN_EMPTY
-Board : board[]
-Board : -getLowestAvailableSpace(column)
-Board : +isCompleted()
-Board : +addtokenToBoard()
-Board : +columnInRange()
-Board : +columnCompleted()
-Board : +maxColumns()
-Board : +maxRows()
-Board : +dropToken(token)
-Board : +getBoard()
+Board : +MAX_COLUMNS
+Board : +MAX_ROWS
 Board : +turn {Turn}
+Board : +board[]
+Board : +isCompleted()
+Board : +columnCompleted()
+Board : +columnInRange()
+Board : +addtoken()
+Board : +anyGoalAchived()
 
-BoardView : -getValidColumnRange()
-BoardView : -printError()
-BoardView : +printBoard()
-BoardView : +askColumn()
-BoardView : +turn{TurnView}
+Token : -Direction{Direction}
+Token : -CONNECTIONS_TO_GOAL
+Token : +row 
+Token : +column
+Token : +tokenSymbol
+Token : -parent
+Token : +isGoal()
+Token : +goalSetters()
+Token : +countConsecutive()
+Token : +getNeighbour()
+
+Direction : -rowOffset
+Direction : -columnOffset
+Direction : -NORTH
+Direction : -EAST
+Direction : -WEST
+Direction : -FIXED
+Direction : +switchOffSet()
+Direction : +setVertical()
+Direction : +setHorizontal()
+Direction : +setDiagonal()
+Direction : +setInverse()
+Direction : +getOffset()
+
 @enduml
 
 
