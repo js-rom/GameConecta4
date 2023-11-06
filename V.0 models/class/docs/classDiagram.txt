@@ -1,0 +1,153 @@
+@startuml
+
+class ClosedInterval
+class Color
+class Coordinate
+class Direction
+class Message
+class Line
+class Board
+class Player
+class Turn
+class YesNoDialog
+class Connect4
+
+Connect4 *-- Board
+Connect4 *-- Turn
+Connect4 ..> YesNoDialog
+Connect4 ..> Message
+Turn --> Board
+Turn ..> Player
+Turn ..> Message
+Player ..> Color
+Player --> Board
+Player ..> Message
+Board ..> Coordinate
+Board ..> Line
+Board ..> Direction
+Board ..> Message
+Direction --> Coordinate
+Direction ..> Coordinate
+Coordinate *-- ClosedInterval
+
+Connect4 : -board{}
+Connect4 : -turn{}
+Connect4 : -constructor()
+Connect4 : +playGames()
+Connect4 : +playGame()
+Connect4 : +isResumed()
+
+YesNoDialog : {static} -AFFIRMATIVE
+YesNoDialog : {static} -NEGATIVE
+YesNoDialog : {static} -SUFFIX
+YesNoDialog : {static} -MESSAGE
+YesNoDialog : -answer
+YesNoDialog : +read()
+YesNoDialog : +isAffirmative()
+YesNoDialog : +isNegative()
+YesNoDialog : +getAnswer()
+
+Turn : {static} -NUMBER_PLAYERS
+Turn : -players
+Turn : -activePlayer
+Turn : -board{}
+Turn : -constructor(board{})
+Turn : +reset()
+Turn : +play()
+Turn : +writeResult()
+
+Player : -color
+Player : -board{}
+Player : -constructor(color, board)
+Player : +play()
+Player : +writeWinner()
+
+Board : -colors[]
+Board : -lastDrop
+Board : +constructor()
+Board : +reset()
+Board : +dropToken(column, color)
+Board : +isComplete(column)
+Board : +isFinished()
+Board : +isWinner()
+Board : +isConnect4(line)
+Board : +writeln()
+Board : -writeHorizontal()
+Board : +isOccupied(coordinate, color)
+Board : +isEmpty(coordinate)
+Board : +getColor(coordinate)
+
+Line : {static} +LENGTH
+Line : -origin
+Line : -coordinates
+Line : -oppositeDirection
+Line : +constructor(coordinate{})
+Line : +set(direction)
+Line : +shift()
+Line : +getCoordinates()
+
+Message : {static} +TITLE
+Message : {static} +HORIZONTAL_LINE
+Message : {static} +VERTICAL_LINE
+Message : {static} +TURN
+Message : {static} +ENTER_COLUMN_TO_DROP
+Message : {static} +INVALID_COLUMN
+Message : {static} +COMPLETED_COLUMN
+Message : {static} +PLAYER_WIN
+Message : {static} +PLAYERS_TIED
+Message : {static} +RESUME
+Message : -string
+Message : +constructor(string)
+Message : +write()
+Message : +writeln()
+ 
+Direction : {static} +NORTH
+Direction : {static} +NORTH_EAST
+Direction : {static} +EAST
+Direction : {static} +SOUTH_EAST
+Direction : {static} +SOUTH
+Direction : {static} +SOUTH_WEST
+Direction : {static} +WEST
+Direction : {static} +NORTH_WEST
+Direction : -coordinate{}
+Direction : +constructor(row, column)
+Direction : +getOpposite()
+Direction : {static} +values()
+Direction : +getCoordinate()
+Direction : +halfValues()
+
+Coordinate : {static} +ORIGIN
+Coordinate : {static} +NUMBER_ROWS
+Coordinate : {static} -ROWS
+Coordinate : {static} +NUMBER_COLUMNS
+Coordinate : {static} -COLUMNS
+Coordinate : -row
+Coordinate : -column
+Coordinate : +constructor(row, column)
+Coordinate : +shifted(coordinate)
+Coordinate : +isValid()
+Coordinate : {static} +isColumnValid(column)
+Coordinate : {static} -isRowValid(row)
+Coordinate : +getRow()
+Coordinate : +getColumn()
+Coordinate : +equals(coordinate)
+Coordinate : +toString()
+
+Color : {static} +RED
+Color : {static} +YELLOW
+Color : {static} +NULL
+Color : -string
+Color : +constructor(string)
+Color : {static} +get(ordinal)
+Color : {static} -values()
+Color : +write()
+Color : +toString()
+
+ClosedInterval : -min
+ClosedInterval : -max
+ClosedInterval : +constructor(min, max)
+ClosedInterval : +isIncluded(value)
+
+@enduml
+
+
