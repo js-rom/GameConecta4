@@ -162,6 +162,7 @@ class Message {
     static PLAYER_WIN = new Message(`#colorS WIN!!! : -)`);
     static PLAYERS_TIED = new Message(`TIED!!!`);
     static RESUME = new Message(`Do you want to continue`);
+    static CHOOSE_PLAYERS = new Message(`Choose the number of players [0-2]`);
 
     #string;
 
@@ -194,6 +195,7 @@ class Line {
         this.#origin = coordinate;
     }
 
+  
     set(direction) {
         this.#coordinates = [this.#origin];
         for (let i = 1; i < Line.LENGTH; i++) {
@@ -310,6 +312,10 @@ class BoardView {
         this.#board = board;
     }
 
+    reset(){
+        this.#board.reset();
+    }
+
     writeln() {
         this.#writeHorizontal();
         for (let i = Coordinate.NUMBER_ROWS - 1; i >= 0; i--) {
@@ -335,23 +341,21 @@ class BoardView {
 class Player {
 
     #color;
-    #board;
+    board;
 
     constructor(color, board) {
         this.#color = color;
-        this.#board = board;
+        this.board = board;
     }
 
-    isValidColumn(column) {
-        return Coordinate.isColumnValid(column);
-    }
+
 
     isColumnCompleted(column) {
-        return this.#board.isComplete(column);
+        return this.board.isComplete(column);
     }
 
     dropToken(column) {
-        this.#board.dropToken(column, this.#color);
+        this.board.dropToken(column, this.#color);
     }
 
     getColor() {
@@ -359,42 +363,98 @@ class Player {
     }
 
     getBoard() {
-        return this.#board;
+        return this.board;
     }
 }
 
-class PlayerView {
+class HumanPlayer extends Player {
 
-    #player;
-
-    constructor(player) {
-        this.#player = player;
+    constructor(color, board) {
+        super(color, board)
     }
 
-    play() {
+    isValidColumn(column) {
+        return Coordinate.isColumnValid(column);
+    }
+}
+
+class RandomPlayer extends Player {
+
+    constructor(color, board) {
+        super(color, board)
+    }
+
+    getColumn() {
         let column;
         let valid;
         do {
-            Message.TURN.write();
-            console.writeln(this.#player.getColor().toString());
+            column = Math.floor(Math.random() * Coordinate.NUMBER_COLUMNS);
+            valid = !this.board.isComplete(column);
+        } while (!valid);
+        return column;
+    }
+}
+
+
+class PlayerView {
+
+    player;
+
+    constructor(player) {
+        this.player = player;
+    }
+
+    play() {
+
+        Message.TURN.write();
+        console.writeln(this.player.getColor().toString());
+        let column = this.getColumn()
+        console.writeln(`column:`)
+        console.writeln(column)
+        this.player.dropToken(column);
+    }
+
+    getColumn() { }
+
+    writeWinner() {
+        let message = Message.PLAYER_WIN.toString();
+        message = message.replace(`#color`, this.player.getColor().toString());
+        console.writeln(message);
+    }
+}
+
+class HumanPlayerView extends PlayerView {
+
+    constructor(player) {
+        super(player);
+    }
+
+    getColumn() {
+        let column;
+        let valid;
+        do {
             column = console.readNumber(Message.ENTER_COLUMN_TO_DROP.toString()) - 1;
-            valid = this.#player.isValidColumn(column);
+            valid = this.player.isValidColumn(column);
             if (!valid) {
                 Message.INVALID_COLUMN.writeln();
             } else {
-                valid = !this.#player.isColumnCompleted(column);
+                valid = !this.player.isColumnCompleted(column);
                 if (!valid) {
                     Message.COMPLETED_COLUMN.writeln();
                 }
             }
         } while (!valid);
-        this.#player.dropToken(column);
+        return column;
+    }
+}
+
+class RandomPlayerView extends PlayerView {
+    constructor(player) {
+        super(player);
     }
 
-    writeWinner() {
-        let message = Message.PLAYER_WIN.toString();
-        message = message.replace(`#color`, this.#player.getColor().toString());
-        console.writeln(message);
+    getColumn() {
+        return this.player.getColumn();
     }
 }
 
@@ -404,19 +464,24 @@ class Turn {
     #players;
     #activePlayer;
     #board;
+    #PLAYER_OPTIONS;
 
     constructor(board) {
         this.#board = board;
+        this.#PLAYER_OPTIONS = [[RandomPlayer, RandomPlayer], [HumanPlayer, RandomPlayer], [HumanPlayer, HumanPlayer]];
         this.#players = [];
-        this.reset();
+        //this.reset();
     }
 
-    reset() {
+    reset(humanPlayers) {
         for (let i = 0; i < Turn.#NUMBER_PLAYERS; i++) {
-            this.#players[i] = new Player(Color.get(i), this.#board);
+            //this.#players[i] = new Player(Color.get(i), this.#board);
+            let player = this.#PLAYER_OPTIONS[humanPlayers][i];
+            this.#players[i] = new player(Color.get(i), this.#board);
         }
         this.#activePlayer = 0;
     }
+
 
     swtichActivePlayer() {
         if (!this.#board.isFinished()) {
@@ -436,21 +501,46 @@ class Turn {
         return this.#activePlayer;
     }
 
+    static getNumberPlayers(){
+        return Turn.#NUMBER_PLAYERS;
+    }
 }
 
 class TurnView {
 
     #turn;
+    #PLAYER_OPTIONS;
+    #players
 
     constructor(turn) {
         this.#turn = turn;
+        this.#PLAYER_OPTIONS = [[RandomPlayerView, RandomPlayerView], [HumanPlayerView, RandomPlayerView], [HumanPlayerView, HumanPlayerView]];
+        this.#players = [];
+        this.reset();
     }
+
+    reset() {
+        let humanPlayers = this.askPlayerNumber();
+        for (let i = 0; i < Turn.getNumberPlayers(); i++) {
+            this.#players[i] = this.#PLAYER_OPTIONS[humanPlayers][i];
+        }
+        this.#turn.reset(humanPlayers);
+    }    
 
     play() {
-        new PlayerView(this.#turn.getPlayers()[this.#turn.getActivePlayer()]).play()
+        let activePlayer = this.#turn.getActivePlayer();
+        let playerView = this.getPlayersView()[activePlayer]
+        let player = this.#turn.getPlayers()[this.#turn.getActivePlayer()]
+        new playerView(player).play();
         this.#turn.swtichActivePlayer()
+
+      /*   new PlayerView(this.#turn.getPlayers()[this.#turn.getActivePlayer()]).play()
+        this.#turn.swtichActivePlayer() */
     }
 
+    getPlayersView() {
+        return this.#players;
+    }
     writeResult() {
         if (this.#turn.getBoard().isWinner()) {
             let activePlayer = this.#turn.getPlayers()[this.#turn.getActivePlayer()];// TODO: create class playerView
@@ -458,6 +548,18 @@ class TurnView {
         } else {
             Message.PLAYERS_TIED.writeln();
         }
+    }
+
+    askPlayerNumber() {
+        const MIN_PLAYERS = 0;
+        const ALLOWED_PLAYERS = new ClosedInterval(MIN_PLAYERS, Turn.getNumberPlayers());
+        let players;
+        let valid;
+        do {
+            players = console.readNumber(Message.CHOOSE_PLAYERS.toString());
+            valid = ALLOWED_PLAYERS.isIncluded(players)
+        } while (!valid)
+        return players;
     }
 }
 
@@ -511,10 +613,10 @@ class Connect4 {
 
     }
 
-    reset() {
+  /*   reset() {
         this.#board.reset();
         this.#turn.reset();
-    }
+    } */
 
     getBoard() {
         return this.#board;
@@ -557,9 +659,14 @@ class Connect4View {
         let yesNoDialog = new YesNoDialog();
         yesNoDialog.read(Message.RESUME.toString());
         if (yesNoDialog.isAffirmative()) {
-            this.#connect4.reset();
+            this.reset();
         }
         return yesNoDialog.isAffirmative();
+    }
+
+    reset(){
+        this.#boardView.reset();
+        this.#turnView.reset();
     }
 }
 
