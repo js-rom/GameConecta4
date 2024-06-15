@@ -1,5 +1,4 @@
-const { Console } = require(`./console`);
-
+const { Console } = require('./console');
 const console = new Console();
 
 class ClosedInterval {
@@ -37,14 +36,23 @@ class Color {
         return [Color.RED, Color.YELLOW, Color.NULL];
     }
 
-    write() {
-        console.write(` ${this.#string[0]} `);
-    }
-
     toString() {
         return this.#string;
     }
 
+}
+
+class colorView {
+
+    #color
+
+    constructor(color) {
+        this.#color = color;
+    }
+
+    write() {
+        console.write(` ${this.#color.toString()[0]} `);
+    }
 }
 
 class Coordinate {
@@ -154,7 +162,6 @@ class Message {
     static PLAYER_WIN = new Message(`#colorS WIN!!! : -)`);
     static PLAYERS_TIED = new Message(`TIED!!!`);
     static RESUME = new Message(`Do you want to continue`);
-    static CHOOSE_PLAYERS = new Message(`Choose the number of players [0-2]`);
 
     #string;
 
@@ -281,26 +288,6 @@ class Board {
         return true;
     }
 
-    writeln() {
-        this.#writeHorizontal();
-        for (let i = Coordinate.NUMBER_ROWS - 1; i >= 0; i--) {
-            Message.VERTICAL_LINE.write();
-            for (let j = 0; j < Coordinate.NUMBER_COLUMNS; j++) {
-                this.getColor(new Coordinate(i, j)).write();
-                Message.VERTICAL_LINE.write();
-            }
-            console.writeln();
-        }
-        this.#writeHorizontal();
-    }
-
-    #writeHorizontal() {
-        for (let i = 0; i < 4 * Coordinate.NUMBER_COLUMNS; i++) {
-            Message.HORIZONTAL_LINE.write();
-        }
-        Message.HORIZONTAL_LINE.writeln();
-    }
-
     isOccupied(coordinate, color) {
         return this.getColor(coordinate) == color;
     }
@@ -314,72 +301,100 @@ class Board {
     }
 
 }
-// TODO incorporar herencia ppara jugador randon y jugador poersona
+
+class BoardView {
+
+    #board;
+
+    constructor(board) {
+        this.#board = board;
+    }
+
+    writeln() {
+        this.#writeHorizontal();
+        for (let i = Coordinate.NUMBER_ROWS - 1; i >= 0; i--) {
+            Message.VERTICAL_LINE.write();
+            for (let j = 0; j < Coordinate.NUMBER_COLUMNS; j++) {
+                let color = this.#board.getColor(new Coordinate(i, j));
+                new colorView(color).write();
+                Message.VERTICAL_LINE.write();
+            }
+            console.writeln();
+        }
+        this.#writeHorizontal();
+    }
+
+    #writeHorizontal() {
+        for (let i = 0; i < 4 * Coordinate.NUMBER_COLUMNS; i++) {
+            Message.HORIZONTAL_LINE.write();
+        }
+        Message.HORIZONTAL_LINE.writeln();
+    }
+}
+
 class Player {
 
-    color;
-    board;
+    #color;
+    #board;
 
     constructor(color, board) {
-        this.color = color;
-        this.board = board;
+        this.#color = color;
+        this.#board = board;
+    }
+
+    isValidColumn(column) {
+        return Coordinate.isColumnValid(column);
+    }
+
+    isColumnCompleted(column) {
+        return this.#board.isComplete(column);
+    }
+
+    dropToken(column) {
+        this.#board.dropToken(column, this.#color);
+    }
+
+    getColor() {
+        return this.#color;
+    }
+
+    getBoard() {
+        return this.#board;
+    }
+}
+
+class PlayerView {
+
+    #player;
+
+    constructor(player) {
+        this.#player = player;
     }
 
     play() {
-        Message.TURN.write();
-        console.writeln(this.color.toString());
-        let column = this.getColumn();
-        this.board.dropToken(column, this.color);
-    }
-
-    writeWinner() {
-        let message = Message.PLAYER_WIN.toString();
-        message = message.replace(`#color`, this.color.toString());
-        console.writeln(message);
-    }
-
-    getColumn() {}
-}
-
-class HumanPlayer extends Player {
-
-    constructor(color, board) {
-        super(color, board)
-    }
-
-    getColumn() {
         let column;
         let valid;
         do {
+            Message.TURN.write();
+            console.writeln(this.#player.getColor().toString());
             column = console.readNumber(Message.ENTER_COLUMN_TO_DROP.toString()) - 1;
-            valid = Coordinate.isColumnValid(column);
+            valid = this.#player.isValidColumn(column);
             if (!valid) {
                 Message.INVALID_COLUMN.writeln();
             } else {
-                valid = !this.board.isComplete(column);
+                valid = !this.#player.isColumnCompleted(column);
                 if (!valid) {
                     Message.COMPLETED_COLUMN.writeln();
                 }
             }
         } while (!valid);
-        return column;
-    }
-}
-
-class RandomPlayer extends Player {
-
-    constructor(color, board) {
-        super(color, board)
+        this.#player.dropToken(column);
     }
 
-    getColumn() {
-        let column;
-        let valid;
-        do {
-            column = Math.floor(Math.random() * Coordinate.NUMBER_COLUMNS);
-            valid = !this.board.isComplete(column);
-        } while (!valid);
-        return column;
+    writeWinner() {
+        let message = Message.PLAYER_WIN.toString();
+        message = message.replace(`#color`, this.#player.getColor().toString());
+        console.writeln(message);
     }
 }
 
@@ -387,49 +402,59 @@ class Turn {
 
     static #NUMBER_PLAYERS = 2;
     #players;
-    #PLAYER_OPTIONS;
     #activePlayer;
     #board;
 
-
     constructor(board) {
         this.#board = board;
-        this.#PLAYER_OPTIONS = [[RandomPlayer, RandomPlayer], [HumanPlayer, RandomPlayer], [HumanPlayer, HumanPlayer]];
         this.#players = [];
-
         this.reset();
     }
 
     reset() {
-        let humanPlayers = this.askPlayerNumber();
         for (let i = 0; i < Turn.#NUMBER_PLAYERS; i++) {
-            this.#players[i] = new this.#PLAYER_OPTIONS[humanPlayers][i](Color.get(i), this.#board);
+            this.#players[i] = new Player(Color.get(i), this.#board);
         }
         this.#activePlayer = 0;
     }
 
-    askPlayerNumber() {
-        const MIN_PLAYERS = 0;
-        const ALLOWED_PLAYERS = new ClosedInterval(MIN_PLAYERS, Turn.#NUMBER_PLAYERS);
-        let players;
-        let valid;
-        do {
-            players = console.readNumber(Message.CHOOSE_PLAYERS.toString());
-            valid = ALLOWED_PLAYERS.isIncluded(players)
-        } while (!valid)
-        return players;
-    }
-
-    play() {
-        this.#players[this.#activePlayer].play();
+    swtichActivePlayer() {
         if (!this.#board.isFinished()) {
             this.#activePlayer = (this.#activePlayer + 1) % Turn.#NUMBER_PLAYERS;
         }
     }
 
+    getBoard() {
+        return this.#board;
+    }
+
+    getPlayers() {
+        return this.#players;
+    }
+
+    getActivePlayer() {
+        return this.#activePlayer;
+    }
+
+}
+
+class TurnView {
+
+    #turn;
+
+    constructor(turn) {
+        this.#turn = turn;
+    }
+
+    play() {
+        new PlayerView(this.#turn.getPlayers()[this.#turn.getActivePlayer()]).play()
+        this.#turn.swtichActivePlayer()
+    }
+
     writeResult() {
-        if (this.#board.isWinner()) {
-            this.#players[this.#activePlayer].writeWinner();
+        if (this.#turn.getBoard().isWinner()) {
+            let activePlayer = this.#turn.getPlayers()[this.#turn.getActivePlayer()];// TODO: create class playerView
+            new PlayerView(activePlayer).writeWinner();
         } else {
             Message.PLAYERS_TIED.writeln();
         }
@@ -481,6 +506,37 @@ class Connect4 {
         this.#turn = new Turn(this.#board);
     }
 
+    isFinished() {
+        return this.#board.isFinished()
+
+    }
+
+    reset() {
+        this.#board.reset();
+        this.#turn.reset();
+    }
+
+    getBoard() {
+        return this.#board;
+    }
+
+    getTurn() {
+        return this.#turn;
+    }
+
+}
+
+class Connect4View {
+    #connect4;
+    #boardView;
+    #turnView;
+
+    constructor() {
+        this.#connect4 = new Connect4();
+        this.#boardView = new BoardView(this.#connect4.getBoard());
+        this.#turnView = new TurnView(this.#connect4.getTurn());
+    }
+
     playGames() {
         do {
             this.playGame();
@@ -489,24 +545,22 @@ class Connect4 {
 
     playGame() {
         Message.TITLE.writeln();
-        this.#board.writeln();
+        this.#boardView.writeln();
         do {
-            this.#turn.play();
-            this.#board.writeln();
-        } while (!this.#board.isFinished());
-        this.#turn.writeResult();
+            this.#turnView.play();
+            this.#boardView.writeln();
+        } while (!this.#connect4.isFinished());
+        this.#turnView.writeResult();
     }
 
     isResumed() {
         let yesNoDialog = new YesNoDialog();
         yesNoDialog.read(Message.RESUME.toString());
         if (yesNoDialog.isAffirmative()) {
-            this.#board.reset();
-            this.#turn.reset();
+            this.#connect4.reset();
         }
         return yesNoDialog.isAffirmative();
     }
-
 }
 
-new Connect4().playGames();
+new Connect4View().playGames();
