@@ -1,0 +1,4 @@
+20240609: 
+	- connect 4 modelos: meter herencia en la calse player. clase persona donde elige la columna y la clase random donde elige una columna aletoriamente.
+		al iniciar el juego se debe de dar la opción de elegir como se quire jugar, dos personas, dos randon o 1 y 1.
+	- connect 4 modelos y vistas: separar el codigo anterior en modelos y vistas. la logica de elegir columna del randon debe de ir en el modelo.
