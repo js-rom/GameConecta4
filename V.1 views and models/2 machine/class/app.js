@@ -393,6 +393,11 @@ class RandomPlayer extends Player {
         } while (!valid);
         return column;
     }
+
+    // añadir metodo aceptar visitador que llame a PlayerView.visitGetColumnRandom()
+    accept(playerView) {
+        return playerView.visitGetColunmRandom(this);
+    }
 }
 
 
@@ -408,13 +413,16 @@ class PlayerView {
 
         Message.TURN.write();
         console.writeln(this.player.getColor().toString());
-        let column = this.getColumn()
+        let column = this.player.accept(this)
         console.writeln(`column:`)
         console.writeln(column)
         this.player.dropToken(column);
     }
 
-    getColumn() { }
+    getColumn() { } // implemeantar los dos metodos getColum para visitar a cada Player
+    visitGetColunmRandom(player) {
+        player.getColumn();
+    }
 
     writeWinner() {
         let message = Message.PLAYER_WIN.toString();
@@ -422,7 +430,7 @@ class PlayerView {
         console.writeln(message);
     }
 }
-
+// eliminar esta clase. pasar get column a player view como un visitador de HumanPlayer visitGetColumHuman
 class HumanPlayerView extends PlayerView {
 
     constructor(player) {
@@ -447,7 +455,7 @@ class HumanPlayerView extends PlayerView {
         return column;
     }
 }
-
+// eliminar esta clase. pasar get column a player view como un visitador de RandomPlayer visitGetColumRandom
 class RandomPlayerView extends PlayerView {
     constructor(player) {
         super(player);
@@ -514,7 +522,7 @@ class TurnView {
 
     constructor(turn) {
         this.#turn = turn;
-        this.#PLAYER_OPTIONS = [[RandomPlayerView, RandomPlayerView], [HumanPlayerView, RandomPlayerView], [HumanPlayerView, HumanPlayerView]];
+        this.#PLAYER_OPTIONS = [[RandomPlayerView, RandomPlayerView], [HumanPlayerView, RandomPlayerView], [HumanPlayerView, HumanPlayerView]]; // cambiar esto por los modelos
         this.#players = [];
         this.reset();
     }
@@ -529,13 +537,10 @@ class TurnView {
 
     play() {
         let activePlayer = this.#turn.getActivePlayer();
-        let playerView = this.getPlayersView()[activePlayer]
+        let playerView = this.getPlayersView()[activePlayer]  // eliminar, solo hay un playerView
         let player = this.#turn.getPlayers()[this.#turn.getActivePlayer()]
         new playerView(player).play();
         this.#turn.swtichActivePlayer()
-
-      /*   new PlayerView(this.#turn.getPlayers()[this.#turn.getActivePlayer()]).play()
-        this.#turn.swtichActivePlayer() */
     }
 
     getPlayersView() {
