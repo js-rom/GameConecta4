@@ -376,6 +376,10 @@ class HumanPlayer extends Player {
     isValidColumn(column) {
         return Coordinate.isColumnValid(column);
     }
+
+    accept(playerView) {
+        return playerView.visitGetColumnHuman();
+    }
 }
 
 class RandomPlayer extends Player {
@@ -419,25 +423,11 @@ class PlayerView {
         this.player.dropToken(column);
     }
 
-    getColumn() { } // implemeantar los dos metodos getColum para visitar a cada Player
+    //getColumn() { } // implemeantar los dos metodos getColum para visitar a cada Player
     visitGetColunmRandom(player) {
-        player.getColumn();
+        return player.getColumn();
     }
-
-    writeWinner() {
-        let message = Message.PLAYER_WIN.toString();
-        message = message.replace(`#color`, this.player.getColor().toString());
-        console.writeln(message);
-    }
-}
-// eliminar esta clase. pasar get column a player view como un visitador de HumanPlayer visitGetColumHuman
-class HumanPlayerView extends PlayerView {
-
-    constructor(player) {
-        super(player);
-    }
-
-    getColumn() {
+    visitGetColumnHuman() {
         let column;
         let valid;
         do {
@@ -454,15 +444,11 @@ class HumanPlayerView extends PlayerView {
         } while (!valid);
         return column;
     }
-}
-// eliminar esta clase. pasar get column a player view como un visitador de RandomPlayer visitGetColumRandom
-class RandomPlayerView extends PlayerView {
-    constructor(player) {
-        super(player);
-    }
 
-    getColumn() {
-        return this.player.getColumn();
+    writeWinner() {
+        let message = Message.PLAYER_WIN.toString();
+        message = message.replace(`#color`, this.player.getColor().toString());
+        console.writeln(message);
     }
 }
 
@@ -522,7 +508,7 @@ class TurnView {
 
     constructor(turn) {
         this.#turn = turn;
-        this.#PLAYER_OPTIONS = [[RandomPlayerView, RandomPlayerView], [HumanPlayerView, RandomPlayerView], [HumanPlayerView, HumanPlayerView]]; // cambiar esto por los modelos
+        this.#PLAYER_OPTIONS = [[RandomPlayer, RandomPlayer], [HumanPlayer, RandomPlayer], [HumanPlayer, HumanPlayer]];
         this.#players = [];
         this.reset();
     }
@@ -536,10 +522,10 @@ class TurnView {
     }    
 
     play() {
-        let activePlayer = this.#turn.getActivePlayer();
-        let playerView = this.getPlayersView()[activePlayer]  // eliminar, solo hay un playerView
-        let player = this.#turn.getPlayers()[this.#turn.getActivePlayer()]
-        new playerView(player).play();
+        //let activePlayer = this.#turn.getActivePlayer();
+        //let playerView = this.getPlayersView()[activePlayer]  // eliminar, solo hay un playerView
+        let activePlayer = this.#turn.getPlayers()[this.#turn.getActivePlayer()]
+        new PlayerView(activePlayer).play();
         this.#turn.swtichActivePlayer()
     }
 
